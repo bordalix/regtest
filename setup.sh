@@ -162,7 +162,8 @@ address=$(curl -s -X GET http://localhost:7003/api/v1/address | jq -r '.address 
 echo $address
 
 puts "fauceting Fulmine address"
-faucet $address 0.001
+hideOutput=$(faucet $address 0.001)
+echo " ✔"
 
 puts "settling funds in Fulmine"
 curl -s -X GET http://localhost:7003/api/v1/settle
@@ -172,16 +173,19 @@ echo " ✔"
 sleep 5
 
 puts "getting lnd url connect"
-docker exec boltz-lnd bash -c \
-'echo -n "lndconnect://boltz-lnd:10009?cert=$(grep -v CERTIFICATE /root/.lnd/tls.cert \
+lndurl=$(docker exec boltz-lnd bash -c \
+  'echo -n "lndconnect://boltz-lnd:10009?cert=$(grep -v CERTIFICATE /root/.lnd/tls.cert \
   | tr -d = | tr "/+" "_-")&macaroon=$(base64 /root/.lnd/data/chain/bitcoin/regtest/admin.macaroon \
-| tr -d = | tr "/+" "_-")"' | tr -d '\n' | { command -v pbcopy >/dev/null && pbcopy || cat; }
+| tr -d = | tr "/+" "_-")"' | tr -d '\n')
+echo $lndurl
+echo $lndurl | { command -v pbcopy >/dev/null && pbcopy; }
 echo " ✔"
 
 puts "final config: MANUAL INTERVENTION REQUIRED"
 echo check fulmine on http://localhost:7003
 echo - the single transaction should be settled
 echo - connect lnd with the URL copied to clipboard
+echo - go to settings, lightning tab, paste into URL and connect
 echo
 
 if [ -t 1 ]; then read -n 1 -p "Press any key to continue..."; fi

@@ -1,4 +1,4 @@
-ARG VERSION=swap_both_sides
+ARG VERSION=master
 
 # Build the web interface
 FROM node:22 AS web-builder

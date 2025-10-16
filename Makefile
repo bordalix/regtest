@@ -1,8 +1,11 @@
+# Capture extra arguments
+EXTRA_ARGS := $(filter-out $(firstword $(MAKECMDGOALS)),$(MAKECMDGOALS))
+
 build:
-	docker-compose build
+	docker-compose build $(EXTRA_ARGS)
 
 down:
-	docker-compose down -v
+	docker-compose down -v $(EXTRA_ARGS)
 
 help:
 	@echo "Available commands:"
@@ -13,10 +16,10 @@ help:
 	@echo "  setup  - Run the setup script"
 
 logs:
-	docker-compose logs -f --tail=100
+	docker-compose logs -f --tail=100 $(EXTRA_ARGS)
 
 setup:
-	chmod +x ./setup.sh && ./setup.sh
+	chmod +x ./setup.sh && ./setup.sh $(EXTRA_ARGS)
 
 up:
-	docker-compose up -d
+	docker-compose up -d $(EXTRA_ARGS)
