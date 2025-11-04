@@ -43,9 +43,7 @@ services:
         condition: service_healthy
   arkd-wallet:
     restart: unless-stopped
-    build:
-      context: .
-      dockerfile: arkd-wallet.Dockerfile
+    image: ghcr.io/arkade-os/arkd-wallet:v0.8.4
     container_name: arkd-wallet
     depends_on:
       - nbxplorer
@@ -58,12 +56,9 @@ services:
       - ARKD_WALLET_NETWORK=regtest
       - ARKD_WALLET_SIGNER_KEY=afcd3fa10f82a05fddc9574fdb13b3991b568e89cc39a72ba4401df8abef35f0
     volumes:
-      - type: tmpfs
-        target: /app/data
+      - arkd_wallet_datadir:/app/data
   arkd:
-    build:
-      context: .
-      dockerfile: arkd.Dockerfile
+    image: ghcr.io/arkade-os/arkd:v0.8.4
     container_name: arkd
     restart: unless-stopped
     depends_on:
@@ -75,7 +70,7 @@ services:
       - ARKD_NO_MACAROONS=true
       - ARKD_VTXO_TREE_EXPIRY=512
       - ARKD_UNILATERAL_EXIT_DELAY=512
-      - ARKD_BOARDING_EXIT_DELAY=1024
+      - ARKD_BOARDING_EXIT_DELAY=2048
       - ARKD_DATADIR=./data/regtest
       - ARKD_WALLET_ADDR=arkd-wallet:6060
       - ARKD_ESPLORA_URL=http://chopsticks:3000
@@ -85,8 +80,7 @@ services:
       - ARKD_DB_TYPE=sqlite
       - ARKD_SESSION_DURATION=10
     volumes:
-      - type: tmpfs
-        target: /app/data
+      - arkd_datadir:/app/data
   boltz-lnd:
     image: lightninglabs/lnd:v0.19.1-beta
     restart: unless-stopped
@@ -229,7 +223,7 @@ services:
     volumes:
       - postgres_datadir:/var/lib/postgresql/data
   boltz-fulmine:
-    image: ghcr.io/arklabshq/fulmine:v0.3.0-rc.3
+    image: ghcr.io/arklabshq/fulmine:v0.3.4
     environment:
       - FULMINE_ARK_SERVER=http://arkd:7070
       - FULMINE_ESPLORA_URL=http://chopsticks:3000
@@ -259,6 +253,10 @@ volumes:
     name: bitcoin_fulmine_data
   lnd_datadir:
     name: lnd_datadir
+  arkd_wallet_datadir:
+    name: arkd_wallet_datadir
+  arkd_datadir:
+    name: arkd_datadir
 
 networks:
   default:

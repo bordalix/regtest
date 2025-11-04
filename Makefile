@@ -5,7 +5,7 @@ build:
 	docker-compose build $(EXTRA_ARGS)
 
 down:
-	docker-compose down -v $(EXTRA_ARGS)
+	chmod +x ./setup.sh && ./setup.sh down
 
 help:
 	@echo "Available commands:"
@@ -19,7 +19,7 @@ logs:
 	docker-compose logs -f --tail=100 $(EXTRA_ARGS)
 
 setup:
-	chmod +x ./setup.sh && ./setup.sh $(EXTRA_ARGS)
+	chmod +x ./setup.sh && ./setup.sh
 
 up:
-	docker-compose up -d $(EXTRA_ARGS)
+	chmod +x ./setup.sh && ./setup.sh up
