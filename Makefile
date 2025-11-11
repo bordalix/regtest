@@ -1,11 +1,17 @@
 # Capture extra arguments
 EXTRA_ARGS := $(filter-out $(firstword $(MAKECMDGOALS)),$(MAKECMDGOALS))
 
+block:
+	nigiri rpc --generate 1
+
 build:
 	docker-compose build $(EXTRA_ARGS)
 
 down:
 	chmod +x ./setup.sh && ./setup.sh down
+
+generate:
+	while true ; do date ; nigiri rpc --generate 1 ; sleep 60 ; done
 
 help:
 	@echo "Available commands:"
