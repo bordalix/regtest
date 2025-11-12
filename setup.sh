@@ -58,7 +58,14 @@ function faucet {
   done
 }
 
+function exit_script {
+  duration=$SECONDS
+  echo "Script took $duration seconds to run."
+  exit
+}
+
 ACTION="setup"
+SECONDS=0
 
 for arg in "$@"; do
   if [[ "$arg" == "up" ]]; then
@@ -81,7 +88,7 @@ fi
 if [ $ACTION == "down" ]; then
   puts "Environment torn down."
   tick
-  exit
+  exit_script
 fi
 
 puts "starting nigiri with LND"
