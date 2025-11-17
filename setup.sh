@@ -139,6 +139,7 @@ $lncli payinvoice --force $invoice
 puts "starting arkd"
 docker compose up -d arkd
 arkd="docker exec arkd arkd"
+ark="docker exec arkd ark"
 
 puts "waiting for arkd to be ready"
 wait_for_cmd "docker exec arkd arkd wallet status"
@@ -159,6 +160,15 @@ sleep 5
 puts "fauceting arkd with 5 BTC"
 address=$($arkd wallet address)
 faucet $address 5
+
+puts "Initialize ark client"
+$ark init --server-url http://localhost:7070 --explorer http://chopsticks:3000 --password secret
+tick
+
+puts "fund the ark-cli with 1 vtxo worth of 2000000"
+note=$($arkd note --amount 2000000)
+$ark redeem-notes -n $note --password secret
+tick
 
 puts "starting fulmine used by boltz"
 docker compose up -d boltz-fulmine
