@@ -146,14 +146,14 @@ wait_for_cmd "docker exec arkd arkd wallet status"
 puts "initializing arkd"
 initialized=$($arkd wallet status | grep 'initialized')
 if [[ ! $initialized =~ "true" ]]; then
-  $arkd wallet create --password password
+  $arkd wallet create --password secret
   sleep 5
 else
   echo "arkd already initialized"
 fi
 
 puts "unlocking arkd"
-$arkd wallet unlock --password password
+$arkd wallet unlock --password secret
 sleep 5
 
 puts "fauceting arkd with 5 BTC"
@@ -172,7 +172,7 @@ echo $seed
 puts "creating Fulmine wallet with seed"
 curl -s -X POST http://localhost:7003/api/v1/wallet/create \
 -H "Content-Type: application/json" \
--d '{"private_key": "'"$seed"'", "password": "password", "server_url": "http://arkd:7070"}' > /dev/null
+-d '{"private_key": "'"$seed"'", "password": "secret", "server_url": "http://arkd:7070"}' > /dev/null
 tick
 
 sleep 5
@@ -180,7 +180,7 @@ sleep 5
 puts "unlocking Fulmine wallet"
 curl -s -X POST http://localhost:7003/api/v1/wallet/unlock \
 -H "Content-Type: application/json" \
--d '{"password": "password"}' > /dev/null
+-d '{"password": "secret"}' > /dev/null
 tick
 
 sleep 2
