@@ -15,10 +15,9 @@ Runs:
 
 Useful aliases:
 
-ark='docker exec arkd ark'
-arkd='docker exec arkd arkd'
-
-nla='nigiri lnd addinvoice --amt'
-nlb='nigiri lnd channelbalance | jq -r .balance'
-nlc='nigiri lnd cancelinvoice'
-nlp='nigiri lnd payinvoice --force'
+- ark='docker exec arkd ark'
+- arkd='docker exec arkd arkd'
+- nla='nigiri lnd addinvoice --amt'
+- nlb='nigiri lnd channelbalance | jq -r .balance'
+- nlc='nigiri lnd cancelinvoice'
+- nlp='nigiri lnd payinvoice --force'
