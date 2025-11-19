@@ -234,3 +234,5 @@ docker compose up -d boltz-postgres boltz
 puts "starting cors proxy"
 docker compose up -d cors
 
+puts "starting nostr relay"
+docker compose up -d nak
