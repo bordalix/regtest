@@ -6,8 +6,11 @@ function puts {
   echo -e "\033[1;35m$1\033[0m"
 }
 
+# print tick and than all arguments
 function tick {
-  echo " ✔"
+  GREEN='\033[32m'
+  NC='\033[0m' # No Color / reset
+  echo -e " ${GREEN}✔${NC} $*"
 }
 
 function warn {
@@ -23,15 +26,15 @@ function wait_for_cmd {
   for ((i=1; i<=ATTEMPTS; i++)); do
     RETURN_CODE=$($COMMAND > /dev/null 2>&1; echo $?)
     if [ "$RETURN_CODE" -eq 0 ]; then
-      tick
+      tick "service is ready"
       return 0
     else
-      echo "Attempt $i/$ATTEMPTS failed, retrying in $INTERVAL second..."
+      echo " Attempt $i/$ATTEMPTS failed, retrying in $INTERVAL second..."
       sleep $INTERVAL
     fi
   done
   
-  echo "Timed out waiting for LND after $((ATTEMPTS * INTERVAL)) seconds."
+  echo " ❌ Timed out waiting for LND after $((ATTEMPTS * INTERVAL)) seconds."
   return 1
 }
 
@@ -48,11 +51,10 @@ function faucet {
   for ((i=1; i<=ATTEMPTS; i++)); do
     NEW_COUNT=$(curl -s http://localhost:3000/address/$ADDRESS | jq .chain_stats.tx_count)
     if [ "$NEW_COUNT" -gt "$INITIAL_COUNT" ]; then
-      echo $TXID
-      tick
+      tick "fauceted with $TXID"
       return 0
     else
-      echo "Attempt $i/$ATTEMPTS failed, retrying in $INTERVAL second..."
+      echo " Attempt $i/$ATTEMPTS failed, retrying in $INTERVAL second..."
       sleep $INTERVAL
     fi
   done
@@ -86,8 +88,7 @@ fi
 
 # if argument 'down' is provided, exit after cleanup
 if [ $ACTION == "down" ]; then
-  puts "Environment torn down."
-  tick
+  tick "Environment torn down."
   exit_script
 fi
 
@@ -100,7 +101,8 @@ wait_for_cmd "nigiri lnd getinfo"
 sleep 2
 
 puts "funding nigiri LND"
-nigiri faucet lnd 1
+TXID=$(nigiri faucet lnd 1)
+tick $TXID
 
 puts "starting boltz LND"
 docker compose up -d boltz-lnd
@@ -116,7 +118,7 @@ faucet "$address" 1
 puts "connecting lnd instances"
 hideOutput=$($lncli connect "$(nigiri lnd getinfo | jq -r .identity_pubkey)"@lnd:9735)
 if [ $($lncli listpeers | jq .peers | jq length) -eq 1 ] && [ $(nigiri lnd listpeers | jq .peers | jq length) -eq 1 ]; then
-  echo "lnd instances are now connected."
+  tick "lnd instances are now connected."
 else
   warn "error connecting instances."
   exit 1
@@ -125,11 +127,11 @@ fi
 puts "opening channel between lnd instances"
 # Open a channel with 100k sats
 hideOutput=$($lncli openchannel --node_key="$(nigiri lnd getinfo | jq -r .identity_pubkey)" --local_amt=100000)
-tick
+tick "channel open."
 
 puts "make the channel mature by mining 10 blocks"
 hideOutput=$(nigiri rpc --generate 10)
-tick
+tick "channel is now mature."
 sleep 5
 
 puts "send 50k sats to the other side to balance the channel"
@@ -147,15 +149,17 @@ wait_for_cmd "docker exec arkd arkd wallet status"
 puts "initializing arkd"
 initialized=$($arkd wallet status | grep 'initialized')
 if [[ ! $initialized =~ "true" ]]; then
-  $arkd wallet create --password secret
+  SEED=$($arkd wallet create --password secret)
+  tick "arkd initialized with seed: $SEED"
   sleep 5
 else
-  echo "arkd already initialized"
+  tick "arkd already initialized"
 fi
 
 puts "unlocking arkd"
-$arkd wallet unlock --password secret
-sleep 5
+OUTPUT=$($arkd wallet unlock --password secret)
+tick "arkd unlocked"
+sleep 1
 
 puts "fauceting arkd with 5 BTC"
 address=$($arkd wallet address)
@@ -163,12 +167,12 @@ faucet $address 5
 
 puts "Initialize ark client"
 $ark init --server-url http://localhost:7070 --explorer http://chopsticks:3000 --password secret
-tick
+tick "ark client initialized"
 
 puts "fund the ark-cli with 1 vtxo worth of 2000000"
 note=$($arkd note --amount 2000000)
-$ark redeem-notes -n $note --password secret
-tick
+txid=$($ark redeem-notes -n $note --password secret | jq -r .txid)
+tick "ark client funded with txid: $txid"
 
 puts "starting fulmine used by boltz"
 docker compose up -d boltz-fulmine
@@ -177,13 +181,13 @@ sleep 5
 
 puts "generating seed for Fulmine"
 seed=$(curl -s -X GET http://localhost:7003/api/v1/wallet/genseed | jq -r .hex)
-echo $seed
+tick "seed: $seed"
 
 puts "creating Fulmine wallet with seed"
 curl -s -X POST http://localhost:7003/api/v1/wallet/create \
 -H "Content-Type: application/json" \
 -d '{"private_key": "'"$seed"'", "password": "secret", "server_url": "http://arkd:7070"}' > /dev/null
-tick
+tick "wallet created"
 
 sleep 5
 
@@ -191,23 +195,20 @@ puts "unlocking Fulmine wallet"
 curl -s -X POST http://localhost:7003/api/v1/wallet/unlock \
 -H "Content-Type: application/json" \
 -d '{"password": "secret"}' > /dev/null
-tick
+tick "wallet unlocked"
 
 sleep 2
 
 puts "getting Fulmine address"
 address=$(curl -s -X GET http://localhost:7003/api/v1/address | jq -r '.address | split("?")[0] | split(":")[1]')
-echo $address
+tick "address: $address"
 
 puts "fauceting Fulmine address"
-hideOutput=$(faucet $address 0.001)
-tick
+faucet $address 0.001
 
 puts "settling funds in Fulmine"
-curl -s -X GET http://localhost:7003/api/v1/settle
-echo
-tick
-
+txid=$(curl -s -X GET http://localhost:7003/api/v1/settle | jq -r .txid)
+tick "funds settled with txid: $txid"
 sleep 5
 
 puts "getting lnd url connect"
@@ -215,9 +216,7 @@ lndurl=$(docker exec boltz-lnd bash -c \
   'echo -n "lndconnect://boltz-lnd:10009?cert=$(grep -v CERTIFICATE /root/.lnd/tls.cert \
   | tr -d = | tr "/+" "_-")&macaroon=$(base64 /root/.lnd/data/chain/bitcoin/regtest/admin.macaroon \
 | tr -d = | tr "/+" "_-")"' | tr -d '\n')
-echo $lndurl
-echo $lndurl | { command -v pbcopy >/dev/null && pbcopy; }
-tick
+tick "lnd url: $lndurl"
 
 puts "final config: MANUAL INTERVENTION REQUIRED"
 echo check fulmine on http://localhost:7003
