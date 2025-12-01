@@ -3,11 +3,13 @@ EXTRA_ARGS := $(filter-out $(firstword $(MAKECMDGOALS)),$(MAKECMDGOALS))
 
 help:
 	@echo "Available commands:"
-	@echo "  build  - Build the Docker images"
-	@echo "  up     - Start the Docker containers in detached mode"
-	@echo "  down   - Stop and remove the Docker containers and volumes"
-	@echo "  logs   - Follow the logs of the Docker containers"
-	@echo "  setup  - Run the setup script"
+	@echo "  block      - Generate a block using nigiri"
+	@echo "  build      - Build the Docker images"
+	@echo "  down       - Stop and clean regtest environment"
+	@echo "  generate   - Continuously generate blocks every 60 seconds"
+	@echo "  logs       - Follow the logs of the Docker containers"
+	@echo "  setup      - Run the setup script and start regtest environment"
+	@echo "  up         - Start the regtest environment"
 
 block:
 	nigiri rpc --generate 1
