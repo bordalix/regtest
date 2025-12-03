@@ -26,7 +26,6 @@ function wait_for_cmd {
   for ((i=1; i<=ATTEMPTS; i++)); do
     RETURN_CODE=$($COMMAND > /dev/null 2>&1; echo $?)
     if [ "$RETURN_CODE" -eq 0 ]; then
-      tick "service is ready"
       return 0
     else
       echo " Attempt $i/$ATTEMPTS failed, retrying in $INTERVAL second..."
@@ -97,6 +96,7 @@ nigiri start --ln
 
 puts "waiting for nigiri LND to be ready"
 wait_for_cmd "nigiri lnd getinfo"
+tick "nigiri LND is ready"
 
 sleep 2
 
@@ -110,6 +110,7 @@ lncli="docker exec -i boltz-lnd lncli --network=regtest"
 
 puts "waiting for boltz LND to be ready"
 wait_for_cmd "docker exec boltz-lnd lncli --network=regtest getinfo"
+tick "boltz LND is ready"
 
 puts "funding boltz LND"
 address=$($lncli newaddress p2wkh | jq -r .address)
@@ -145,6 +146,7 @@ ark="docker exec arkd ark"
 
 puts "waiting for arkd to be ready"
 wait_for_cmd "docker exec arkd arkd wallet status"
+tick "arkd is ready"
 
 puts "initializing arkd"
 initialized=$($arkd wallet status | grep 'initialized')
@@ -161,15 +163,15 @@ OUTPUT=$($arkd wallet unlock --password secret)
 tick "arkd unlocked"
 sleep 1
 
-puts "fauceting arkd with 5 BTC"
+puts "fauceting arkd with 10 BTC"
 address=$($arkd wallet address)
-faucet $address 5
+faucet $address 10
 
 puts "Initialize ark client"
 $ark init --server-url http://localhost:7070 --explorer http://chopsticks:3000 --password secret
 tick "ark client initialized"
 
-puts "fund the ark-cli with 1 vtxo worth of 2000000"
+puts "fund the ark-cli with 1 vtxo worth of 2_000_000"
 note=$($arkd note --amount 2000000)
 txid=$($ark redeem-notes -n $note --password secret | jq -r .txid)
 tick "ark client funded with txid: $txid"
@@ -230,8 +232,8 @@ echo
 puts "starting boltz backend and postgres"
 docker compose up -d boltz-postgres boltz
 
-puts "starting cors proxy"
+puts "starting cors proxy on localhost:9069"
 docker compose up -d cors
 
-puts "starting nostr relay"
+puts "starting nostr relay on ws://localhost:10547"
 docker compose up -d nak
