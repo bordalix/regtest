@@ -163,9 +163,11 @@ OUTPUT=$($arkd wallet unlock --password secret)
 tick "arkd unlocked"
 sleep 1
 
-puts "fauceting arkd with 10 BTC"
+puts "fauceting arkd with 21 BTC"
 address=$($arkd wallet address)
-faucet $address 10
+for i in {1..21}; do
+  nigiri faucet "$address" 1
+done
 
 puts "Initialize ark client"
 $ark init --server-url http://localhost:7070 --explorer http://chopsticks:3000 --password secret
