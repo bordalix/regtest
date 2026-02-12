@@ -13,6 +13,33 @@ function tick {
   echo -e " ${GREEN}✔${NC} $*"
 }
 
+# Function to handle Text-to-Speech across different platforms
+speak() {
+    local message="$1"
+
+    if command -v say >/dev/null 2>&1; then
+        # macOS (or Linux with an alias/wrapper)
+        say "$message"
+    elif command -v spd-say >/dev/null 2>&1; then
+        # Linux (Speech Dispatcher - very common)
+        spd-say "$message"
+    elif command -v espeak-ng >/dev/null 2>&1; then
+        # Linux (eSpeak Next Gen)
+        espeak-ng "$message"
+    elif command -v espeak >/dev/null 2>&1; then
+        # Linux (Original eSpeak)
+        espeak "$message"
+    elif command -v festival >/dev/null 2>&1; then
+        # Linux (Festival)
+        echo "$message" | festival --tts
+    else
+        # Fallback if no TTS engine is found
+        echo "TTS Error: No speech engine found. Printing instead:"
+        echo "$message"
+        return 1
+    fi
+}
+
 function warn {
   echo
   echo -e "\033[1;31m$1\033[0m"
@@ -88,6 +115,7 @@ fi
 # if argument 'down' is provided, exit after cleanup
 if [ $ACTION == "down" ]; then
   tick "Environment torn down."
+  speak "Environment torn down."
   exit_script
 fi
 
@@ -239,3 +267,5 @@ docker compose up -d cors
 
 puts "starting nostr relay on ws://localhost:10547"
 docker compose up -d nak
+
+speak "Setup complete"
