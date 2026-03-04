@@ -154,8 +154,8 @@ else
 fi
 
 puts "opening channel between lnd instances"
-# Open a channel with 100k sats
-hideOutput=$($lncli openchannel --node_key="$(nigiri lnd getinfo | jq -r .identity_pubkey)" --local_amt=100000)
+# Open a channel with 1M sats
+hideOutput=$($lncli openchannel --node_key="$(nigiri lnd getinfo | jq -r .identity_pubkey)" --local_amt=1000000)
 tick "channel open."
 
 puts "make the channel mature by mining 10 blocks"
@@ -163,8 +163,8 @@ hideOutput=$(nigiri rpc --generate 10)
 tick "channel is now mature."
 sleep 5
 
-puts "send 50k sats to the other side to balance the channel"
-invoice=$(nigiri lnd addinvoice --amt 50000 | jq -r .payment_request)
+puts "send 500k sats to the other side to balance the channel"
+invoice=$(nigiri lnd addinvoice --amt 500000 | jq -r .payment_request)
 $lncli payinvoice --force $invoice
 
 puts "starting arkd"
@@ -212,11 +212,11 @@ docker compose up -d boltz-fulmine
 sleep 5
 
 puts "generating seed for Fulmine"
-seed=$(curl -s -X GET http://localhost:7003/api/v1/wallet/genseed | jq -r .hex)
+seed=$(curl -s -X GET http://localhost:7001/api/v1/wallet/genseed | jq -r .hex)
 tick "seed: $seed"
 
 puts "creating Fulmine wallet with seed"
-curl -s -X POST http://localhost:7003/api/v1/wallet/create \
+curl -s -X POST http://localhost:7001/api/v1/wallet/create \
 -H "Content-Type: application/json" \
 -d '{"private_key": "'"$seed"'", "password": "secret", "server_url": "http://arkd:7070"}' > /dev/null
 tick "wallet created"
@@ -224,7 +224,7 @@ tick "wallet created"
 sleep 5
 
 puts "unlocking Fulmine wallet"
-curl -s -X POST http://localhost:7003/api/v1/wallet/unlock \
+curl -s -X POST http://localhost:7001/api/v1/wallet/unlock \
 -H "Content-Type: application/json" \
 -d '{"password": "secret"}' > /dev/null
 tick "wallet unlocked"
@@ -232,14 +232,14 @@ tick "wallet unlocked"
 sleep 2
 
 puts "getting Fulmine address"
-address=$(curl -s -X GET http://localhost:7003/api/v1/address | jq -r '.address | split("?")[0] | split(":")[1]')
+address=$(curl -s -X GET http://localhost:7001/api/v1/address | jq -r '.address | split("?")[0] | split(":")[1]')
 tick "address: $address"
 
 puts "fauceting Fulmine address"
-faucet $address 0.001
+faucet $address 1
 
 puts "settling funds in Fulmine"
-txid=$(curl -s -X GET http://localhost:7003/api/v1/settle | jq -r .txid)
+txid=$(curl -s -X GET http://localhost:7001/api/v1/settle | jq -r .txid)
 tick "funds settled with txid: $txid"
 sleep 5
 
@@ -251,7 +251,7 @@ lndurl=$(docker exec boltz-lnd bash -c \
 tick "lnd url: $lndurl"
 
 puts "final config: MANUAL INTERVENTION REQUIRED"
-echo check fulmine on http://localhost:7003
+echo check fulmine on http://localhost:7001
 echo - the single transaction should be settled
 echo - connect lnd with the URL copied to clipboard
 echo - go to settings, lightning tab, paste into URL and connect
