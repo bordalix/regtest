@@ -17,6 +17,8 @@ function tick {
 speak() {
     local message="$1"
 
+    echo -e "$message"
+
     if command -v say >/dev/null 2>&1; then
         # macOS (or Linux with an alias/wrapper)
         say "$message"
@@ -114,7 +116,6 @@ fi
 
 # if argument 'down' is provided, exit after cleanup
 if [ $ACTION == "down" ]; then
-  tick "Environment torn down."
   speak "Environment torn down."
   exit_script
 fi
@@ -205,6 +206,9 @@ puts "fund the ark-cli with 1 vtxo worth of 2_000_000"
 note=$($arkd note --amount 2000000)
 txid=$($ark redeem-notes -n $note --password secret | jq -r .txid)
 tick "ark client funded with txid: $txid"
+
+puts "starting ark-explorer on localhost:7080"
+docker compose up -d ark-explorer
 
 puts "starting fulmine used by boltz"
 docker compose up -d boltz-fulmine

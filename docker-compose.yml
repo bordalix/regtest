@@ -81,6 +81,20 @@ services:
       - ARKD_SESSION_DURATION=10
     volumes:
       - arkd_datadir:/app/data
+  ark-explorer:
+    container_name: ark-explorer
+    image: ghcr.io/arklabshq/arkade-explorer:latest
+    restart: unless-stopped
+    depends_on:
+      - arkd
+    command:
+      - sh
+      - -c
+      - |
+        sed -i 's|https://arkade.computer|http://localhost:7070|g' /usr/share/nginx/html/assets/*.js &&
+        nginx -g 'daemon off;'
+    ports:
+      - '7080:80'
   boltz-lnd:
     image: lightninglabs/lnd:v0.19.1-beta
     restart: unless-stopped
