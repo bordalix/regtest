@@ -241,6 +241,7 @@ tick "address: $address"
 
 puts "fauceting Fulmine address"
 faucet $address 1
+sleep 2
 
 puts "settling funds in Fulmine"
 txid=$(curl -s -X GET http://localhost:7001/api/v1/settle | jq -r .txid)
