@@ -43,7 +43,7 @@ services:
         condition: service_healthy
   arkd-wallet:
     restart: unless-stopped
-    image: ghcr.io/arkade-os/arkd-wallet:v0.9.0
+    image: ghcr.io/arkade-os/arkd-wallet:v0.9.1
     container_name: arkd-wallet
     depends_on:
       - nbxplorer
@@ -58,7 +58,7 @@ services:
     volumes:
       - arkd_wallet_datadir:/app/data
   arkd:
-    image: ghcr.io/arkade-os/arkd:v0.9.0
+    image: ghcr.io/arkade-os/arkd:v0.9.1
     container_name: arkd
     restart: unless-stopped
     depends_on:
@@ -68,7 +68,7 @@ services:
     environment:
       - ARKD_LOG_LEVEL=6
       - ARKD_NO_MACAROONS=true
-      - ARKD_VTXO_TREE_EXPIRY=512
+      - ARKD_VTXO_TREE_EXPIRY=1000000
       - ARKD_UNILATERAL_EXIT_DELAY=512
       - ARKD_BOARDING_EXIT_DELAY=2048
       - ARKD_DATADIR=./data/regtest
@@ -245,7 +245,7 @@ services:
     volumes:
       - postgres_datadir:/var/lib/postgresql/data
   boltz-fulmine:
-    image: ghcr.io/arklabshq/fulmine:v0.3.15
+    image: ghcr.io/arklabshq/fulmine:v0.3.16
     environment:
       - FULMINE_LOG_LEVEL=5
       - FULMINE_NO_MACAROONS=true
