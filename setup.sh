@@ -21,7 +21,7 @@ speak() {
 
     if command -v say >/dev/null 2>&1; then
         # macOS (or Linux with an alias/wrapper)
-        say "$message"
+        say -v whisper "$message"
     elif command -v spd-say >/dev/null 2>&1; then
         # Linux (Speech Dispatcher - very common)
         spd-say "$message"

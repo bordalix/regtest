@@ -6,6 +6,7 @@ EXTRA_ARGS := $(filter-out $(firstword $(MAKECMDGOALS)),$(MAKECMDGOALS))
 help:
 	@echo "Available commands:"
 	@echo "  block                 - Generate block"
+	@echo "  blocks <num>          - Generate multiple blocks"
 	@echo "  build                 - Build the Docker images"
 	@echo "  down                  - Stop and clean regtest environment"
 	@echo "  help                  - Show this help message"
@@ -22,6 +23,9 @@ help:
 
 block:
 	nigiri rpc --generate 1
+
+blocks:
+	nigiri rpc --generate $(EXTRA_ARGS)
 
 build:
 	docker-compose build $(EXTRA_ARGS)
